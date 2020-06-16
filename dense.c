@@ -23,10 +23,14 @@ struct Dense_Node *dense_node_init(uint32_t num_weights) {
 		exit(1);
 	}
 
+	printf("Node created\n");
+
 	node->num_weights	= num_weights;
 	node->result		= 0;
 	node->weight		= calloc(num_weights, sizeof(uint32_t));
 	
+	printf("Weights allocated\n");
+
 	return node;
 }
 
@@ -35,12 +39,11 @@ struct Dense_Node *dense_node_init(uint32_t num_weights) {
  * 
  * input: (Dense_Node) node
  *
- * output: Void. Frees the memory associated with node.
+ * output: Frees the memory associated with node.
  */
 void dense_node_free(struct Dense_Node *node) {
 	free(node->weight);
 	free(node);
-	return;
 }
 
 /*
@@ -48,7 +51,7 @@ void dense_node_free(struct Dense_Node *node) {
  * 
  * input: (Dense_Node) node, (uint32) input_loc, (uint32) weight
  *
- * output: Void. Sets the node's weight value for a specific connection to previous layer.
+ * output: Sets the node's weight value for a specific connection to previous layer.
  */
 void dense_node_set_weight(struct Dense_Node *node, uint32_t input_loc, uint32_t weight) {
 	if(input_loc >= node->num_weights) {
@@ -64,7 +67,7 @@ void dense_node_set_weight(struct Dense_Node *node, uint32_t input_loc, uint32_t
  * 
  * input: (Dense_Node) node, (uint32) result
  *
- * output: Void. Sets the result of node. Result will be calculated by passing weighted average to activation function.
+ * output: Sets the result of node. Result will be calculated by passing weighted average to activation function.
  */
 void dense_node_set_result(struct Dense_Node *node, uint32_t result) {
 	node->result = result;
@@ -75,7 +78,7 @@ void dense_node_set_result(struct Dense_Node *node, uint32_t result) {
  * 
  * input: (Dense_Node) node
  *
- * output: Void. Prints all data associated with node.
+ * output: Prints all data associated with node.
  */
 void print_node(struct Dense_Node *node) {
 	printf("result: %d\n", node->result);
@@ -92,15 +95,78 @@ void print_node(struct Dense_Node *node) {
 /*
  * dense_layer_init()
  *
- * input: (uint32) num_nodes, (string) activation
+ * input: (uint32) num_nodes, (uint32) input, (string) activation
  *
- * output: Returns a Dense_Layer with num_nodes amount of nodes, all initialized. Activation function will be set too.
+ * output: Returns a Dense_Layer with num_nodes amount of nodes, all initialized with each node
+ * 	   having weights equal to the number of nodes in the input. Activation function will be set too.
+ *	   Weights for each node will have random initializations up to 999.
+ */
+
+struct Dense_Layer *dense_layer_init(uint32_t num_nodes, uint32_t input, char activation[10]) {
+	struct Dense_Layer *layer = calloc(1, sizeof(struct Dense_Layer));
+	if(!layer) {
+		perror("calloc failed");
+		exit(1);
+	}
+
+	printf("got a layer\n");
+
+	layer->activation	= activation;
+	layer->num_nodes	= num_nodes;
+
+	printf("got activation and num nodes\n");
+
+	for(int i=0; i < num_nodes; i++) {
+
+		printf("starting making node[%d]\n", i);
+
+		layer->node[i] = dense_node_init(input);
+
+		printf("node[%d] initialized\n", i);
+
+
+		for(int k=0; k < input; k++) {
+			uint32_t num = rand() % 1000;
+
+			printf("random weight aquired\n");
+
+			dense_node_set_weight(layer->node[i], k, num);
+
+			printf("weight set\n");
+		}
+	}
+
+	return layer;
+}
+
+/*
+ * dense_layer_free()
+ *
+ * input: (Dense_Layer) layer
+ *
+ * output: Void. Frees all memory associated with a given layer.
+ */
+
+void dense_layer_free(struct Dense_Layer *layer) {
+	for(int i=0; i < layer->num_nodes; i++) {
+		dense_node_free(layer->node[i]);
+	}
+	free(layer);
+}
+
+/*
+ * print_layer()
+ *
+ * intput: (Dense_Layer) layer
+ *
+ * output: Prints all the data associated with each node in layer as well as other Layer data.
  *
  */
 
-struct Dense_Layer *dense_layer_init(uint32_t num_nodes, char* activation) {
-	struct Dense_Layer *layer = calloc(1, sizeof(struct Dense_Layer));
-
-
-	return layer;
+void print_layer(struct Dense_Layer *layer) {
+	for(int i=0; i < layer->num_nodes; i++) {
+		printf("NODE[%d]\n", i);
+		print_node(layer->node[i]);
+	}
+	printf("activation: %s\n", layer->activation);
 }

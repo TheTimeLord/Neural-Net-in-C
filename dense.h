@@ -10,7 +10,7 @@ struct Dense_Node {
 struct Dense_Layer {
 	char* activation;
 	uint32_t num_nodes;
-	struct Dense_Node *nodes;
+	struct Dense_Node **node;
 };
 
 /**************************************************
@@ -31,6 +31,10 @@ void print_node(struct Dense_Node *node);
  *              Layer Functions
  **************************************************/
 
-struct Dense_Layer *dense_layer_init(uint32_t num_nodes, char* activation);
+struct Dense_Layer *dense_layer_init(uint32_t num_nodes, uint32_t input, char* activation);
+
+void dense_layer_free(struct Dense_Layer *layer);
+
+void print_layer(struct Dense_Layer *layer);
 
 #endif
