@@ -4,139 +4,56 @@
 #include <time.h>
 #include "dense.h"
 
-/*******************************************************
- *		NODE FUNCTIONS
- *******************************************************/
-
-
-/*
- * dense_node_init()
- * 
- * input: (uint32) num_weights
- *
- * output: Returns a memory allocated node with num_weights amount of weights
- */
-struct Dense_Node *dense_node_init(uint32_t num_weights) {
-	struct Dense_Node *node = calloc(1, sizeof(struct Dense_Node));
-	if(!node) {
-		perror("calloc failed");
-		exit(1);
-	}
-
-	printf("Node created\n");
-
-	node->num_weights	= num_weights;
-	node->result		= 0;
-	node->weight		= calloc(num_weights, sizeof(uint32_t));
-	
-	printf("Weights allocated\n");
-
-	return node;
-}
-
-/*
- * dense_node_free()
- * 
- * input: (Dense_Node) node
- *
- * output: Frees the memory associated with node.
- */
-void dense_node_free(struct Dense_Node *node) {
-	free(node->weight);
-	free(node);
-}
-
-/*
- * dense_node_set_weight()
- * 
- * input: (Dense_Node) node, (uint32) input_loc, (uint32) weight
- *
- * output: Sets the node's weight value for a specific connection to previous layer.
- */
-void dense_node_set_weight(struct Dense_Node *node, uint32_t input_loc, uint32_t weight) {
-	if(input_loc >= node->num_weights) {
-		printf("weight %d OUT OF BOUNDS for input_loc %d. MAX LOCATION = %d", weight, input_loc, node->num_weights - 1);
-		exit(1);
-	}
-	node->weight[input_loc] = weight;
-}
-
-
-/*
- * dense_node_set_result()
- * 
- * input: (Dense_Node) node, (uint32) result
- *
- * output: Sets the result of node. Result will be calculated by passing weighted average to activation function.
- */
-void dense_node_set_result(struct Dense_Node *node, uint32_t result) {
-	node->result = result;
-}
-
-/*
- * print_node()
- * 
- * input: (Dense_Node) node
- *
- * output: Prints all data associated with node.
- */
-void print_node(struct Dense_Node *node) {
-	printf("result: %d\n", node->result);
-	printf("num_weights: %d\n", node->num_weights);
-	for(int i=0; i < node->num_weights; i++) {
-		printf("weight[%d]: %d\n", i, node->weight[i]);
-	}
-}
 
 /*******************************************************
  *		LAYER FUNCTIONS
  *******************************************************/
 
+
 /*
  * dense_layer_init()
  *
- * input: (uint32) num_nodes, (uint32) input, (string) activation
+ * input: (Dense_Layer) layer, (uint32) num_nodes, (uint32) num_input, (string) activation
  *
- * output: Returns a Dense_Layer with num_nodes amount of nodes, all initialized with each node
+ * output: Initializes a Dense_Layer with num_nodes amount of nodes, all initialized with each node
  * 	   having weights equal to the number of nodes in the input. Activation function will be set too.
- *	   Weights for each node will have random initializations up to 999.
+ *	   Weights for each node will have random initializations between -64 and 64.
  */
 
-struct Dense_Layer *dense_layer_init(uint32_t num_nodes, uint32_t input, char activation[10]) {
-	struct Dense_Layer *layer = calloc(1, sizeof(struct Dense_Layer));
-	if(!layer) {
-		perror("calloc failed");
-		exit(1);
-	}
-
-	printf("got a layer\n");
+void dense_layer_init(struct Dense_Layer *layer, uint32_t num_nodes, uint32_t num_input, char activation[10]) {
 
 	layer->activation	= activation;
 	layer->num_nodes	= num_nodes;
+	layer->num_input	= num_input;
 
-	printf("got activation and num nodes\n");
+	// Allocate an array of uint32 pointers; each pointer will be an array of weights for each node.
 
+	layer->weights = calloc(num_nodes, sizeof(uint32_t *));
+	if(!layer->weights) {
+		perror("weights calloc failed");
+		exit(1);
+	}
+	
+	// Allocate an array of uint32. These will be the weights for each node.
 	for(int i=0; i < num_nodes; i++) {
-
-		printf("starting making node[%d]\n", i);
-
-		layer->node[i] = dense_node_init(input);
-
-		printf("node[%d] initialized\n", i);
-
-
-		for(int k=0; k < input; k++) {
-			uint32_t num = rand() % 1000;
-
-			printf("random weight aquired\n");
-
-			dense_node_set_weight(layer->node[i], k, num);
-
-			printf("weight set\n");
+		layer->weights[i] = calloc(num_input, sizeof(uint32_t));
+		if(!layer->weights[i]) {
+                	perror("node calloc failed");
+                	exit(1);
 		}
+
+		// set the initial weights to a value between -64 and 64
+		for(int k=0; k < num_input; k++) {
+			int pos		= (rand() % 2);
+			uint32_t num	= (rand() % 65);
+			if(!pos) {
+				num = num * -1;
+			}
+			layer->weights[i][k] = num;
+		}
+
 	}
 
-	return layer;
 }
 
 /*
@@ -149,9 +66,9 @@ struct Dense_Layer *dense_layer_init(uint32_t num_nodes, uint32_t input, char ac
 
 void dense_layer_free(struct Dense_Layer *layer) {
 	for(int i=0; i < layer->num_nodes; i++) {
-		dense_node_free(layer->node[i]);
+		free(layer->weights[i]);
 	}
-	free(layer);
+	free(layer->weights);
 }
 
 /*
@@ -166,7 +83,11 @@ void dense_layer_free(struct Dense_Layer *layer) {
 void print_layer(struct Dense_Layer *layer) {
 	for(int i=0; i < layer->num_nodes; i++) {
 		printf("NODE[%d]\n", i);
-		print_node(layer->node[i]);
+		for(int k=0; k < layer->num_input; k++) {
+			printf("weight[%d]: %d\n", k, layer->weights[i][k]);
+		}
 	}
 	printf("activation: %s\n", layer->activation);
+	printf("num_nodes: %d\n", layer->num_nodes);
+	printf("inputs per node: %d\n", layer->num_input);
 }
