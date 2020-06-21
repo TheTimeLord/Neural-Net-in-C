@@ -17,7 +17,7 @@
  *
  * output: Initializes a Dense_Layer with num_nodes amount of nodes, all initialized with each node
  * 	   having weights equal to the number of nodes in the input. Activation function will be set too.
- *	   Weights for each node will have random initializations between -64 and 64.
+ *	   Weights for each node will have random initializations between -100 and 100.
  */
 
 void dense_layer_init(struct Dense_Layer *layer, uint32_t num_nodes, uint32_t num_input, char activation[10]) {
@@ -28,7 +28,7 @@ void dense_layer_init(struct Dense_Layer *layer, uint32_t num_nodes, uint32_t nu
 
 	// Allocate an array of uint32 pointers; each pointer will be an array of weights for each node.
 
-	layer->weights = calloc(num_nodes, sizeof(uint32_t *));
+	layer->weights = calloc(num_nodes, sizeof(float *));
 	if(!layer->weights) {
 		perror("weights calloc failed");
 		exit(1);
@@ -36,16 +36,17 @@ void dense_layer_init(struct Dense_Layer *layer, uint32_t num_nodes, uint32_t nu
 	
 	// Allocate an array of uint32. These will be the weights for each node.
 	for(int i=0; i < num_nodes; i++) {
-		layer->weights[i] = calloc(num_input, sizeof(uint32_t));
+		layer->weights[i] = calloc(num_input, sizeof(float));
 		if(!layer->weights[i]) {
                 	perror("node calloc failed");
                 	exit(1);
 		}
 
-		// set the initial weights to a value between -64 and 64
+		// set the initial weights to a value between -100 and 100
 		for(int k=0; k < num_input; k++) {
 			int pos		= (rand() % 2);
-			uint32_t num	= (rand() % 65);
+			float num	= (float) rand() / RAND_MAX;
+			num = num * 100;
 			if(!pos) {
 				num = num * -1;
 			}
@@ -72,6 +73,18 @@ void dense_layer_free(struct Dense_Layer *layer) {
 }
 
 /*
+ * dense_layer_set_weights()
+ *
+ * input: (Dense_Layer) layer, (uint32) node, (float *) weights
+ *
+ * output: Sets the weight of a connection from a node to the previous.
+ */
+
+void dense_layer_set_weights(struct Dense_Layer *layer, uint32_t node, uint32_t connection, float weight) {
+	layer->weights[node][connection] = weight;
+}
+
+/*
  * print_layer()
  *
  * intput: (Dense_Layer) layer
@@ -84,7 +97,7 @@ void print_layer(struct Dense_Layer *layer) {
 	for(int i=0; i < layer->num_nodes; i++) {
 		printf("NODE[%d]\n", i);
 		for(int k=0; k < layer->num_input; k++) {
-			printf("weight[%d]: %d\n", k, layer->weights[i][k]);
+			printf("weight[%d]: %f\n", k, layer->weights[i][k]);
 		}
 	}
 	printf("activation: %s\n", layer->activation);
