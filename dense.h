@@ -21,4 +21,10 @@ void dense_layer_set_weights(struct Dense_Layer *layer, uint32_t node, uint32_t 
 void print_layer(struct Dense_Layer *layer);
 
 
+/**************************************************
+ *              Activation Functions
+ **************************************************/
+
+void sigmoid(float *input, struct Dense_Layer *layer);
+
 #endif

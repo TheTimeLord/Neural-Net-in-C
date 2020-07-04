@@ -21,6 +21,11 @@ int main(int argc, char *argv[]) {
 	printf("---------------------------------------\n");
 	print_layer(output);
 
+
+	printf("*****************\n");
+	float in_test[5] = {1.1, -2.2, 3.3, -4.4, 5.5};
+	sigmoid(in_test, second);
+
 	dense_layer_free(first);
 	dense_layer_free(second);
 	dense_layer_free(output);

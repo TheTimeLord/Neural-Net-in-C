@@ -104,3 +104,22 @@ void print_layer(struct Dense_Layer *layer) {
 	printf("num_nodes: %d\n", layer->num_nodes);
 	printf("inputs per node: %d\n", layer->num_input);
 }
+
+
+/*******************************************************
+ *              ACTIVATION FUNCTIONS
+ *******************************************************/
+
+void sigmoid(float *input, struct Dense_Layer *layer) {
+	// Go through each node in the layer
+	for(int i=0; i < layer->num_nodes; i++) {
+		float sum = 0.0;
+		for(int k=0; k < layer->num_input; k++) {
+			sum += layer->weights[i][k] * input[k];
+		}
+
+		//TODO: Add a bias term to be used in the weighted sum.
+
+		printf("weighted sum = %f\n", sum);
+	}
+}
